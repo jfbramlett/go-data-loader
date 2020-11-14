@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"math/rand"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
@@ -15,6 +16,9 @@ type logkeyStruct struct{}
 
 var (
 	logKey = logkeyStruct{}
+	chords = []string{"major", "minor"}
+	keys   = []string{"a#", "c", "d", "d#", "e", "e#"}
+	bpms   = []int{16, 32, 64, 120, 240}
 )
 
 // The serveCmd will execute the generate command
@@ -29,6 +33,7 @@ func init() {
 	// config variable.
 	flags := dbloaderCmd.Flags()
 	flags.Int("records", 900000, "the number of records to load")
+	flags.Bool("sample", false, "load the sample table or metadata table")
 	flags.String("dsn", "root:password@tcp(localhost:3306)/test", "db connection string")
 
 	// Add the "serve" sub-command to the root command.
@@ -53,7 +58,17 @@ func load(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	loadRecords(ctx, records, dsn)
+	loadSample, err := cmd.Flags().GetBool("sample")
+	if err != nil {
+		logger.Error(err, "failed to resolve sample flag")
+		return
+	}
+
+	if loadSample {
+		loadSampleTable(ctx, records, dsn)
+	} else {
+		loadMetadataTable(ctx, records, dsn)
+	}
 }
 
 type Sample struct {
@@ -65,12 +80,8 @@ type Sample struct {
 	Name      string `db:"name"`
 }
 
-func loadRecords(ctx context.Context, records int, dsn string) {
+func loadSampleTable(ctx context.Context, records int, dsn string) {
 	logger := ctx.Value(logKey).(*logrus.Entry)
-
-	chords := []string{"major", "minor"}
-	keys := []string{"a#", "c", "d", "d#", "e", "e#"}
-	bpms := []int{16, 32, 64, 120, 240}
 
 	db, err := sqlx.Open("mysql", dsn)
 	if err != nil {
@@ -94,6 +105,74 @@ func loadRecords(ctx context.Context, records int, dsn string) {
 		}
 
 		_, err := db.NamedExecContext(ctx, stmt, s)
+		if err != nil {
+			logger.WithError(err).Error("failed executing insert")
+			return
+		}
+
+		if i%10 == 0 {
+			logger.Infof("completed %d records", i)
+		}
+	}
+}
+
+type Metadata struct {
+	AssetUUID         string `db:"asset_uuid"`
+	AssetMetaDataId   int    `db:"asset_metadata_id"`
+	AssetMetaName     string `db:"name"`
+	AssetMetaDatatype string `db:"datatype"`
+	Value             string `db:"value"`
+}
+
+func loadMetadataTable(ctx context.Context, records int, dsn string) {
+	logger := ctx.Value(logKey).(*logrus.Entry)
+
+	db, err := sqlx.Open("mysql", dsn)
+	if err != nil {
+		logger.WithError(err).Errorf("Waiting for DB to be ready")
+		return
+	}
+
+	stmt := `insert into asset_data (asset_uuid, asset_metadata_id, value) values (:asset_uuid, :asset_metadata_id, :value)`
+	for i := 0; i < records; i++ {
+		chordsRand := rand.Intn(len(chords))
+		keysRand := rand.Intn(len(keys))
+		bpmRand := rand.Intn(len(bpms))
+		sampleUUID := uuid.New().String()
+
+		_, err := db.NamedExecContext(ctx, stmt, &Metadata{
+			AssetUUID:       sampleUUID,
+			AssetMetaDataId: 1,
+			Value:           chords[chordsRand],
+		})
+		if err != nil {
+			logger.WithError(err).Error("failed executing insert")
+			return
+		}
+
+		_, err = db.NamedExecContext(ctx, stmt, &Metadata{
+			AssetUUID:       sampleUUID,
+			AssetMetaDataId: 2,
+			Value:           keys[keysRand],
+		})
+		if err != nil {
+			logger.WithError(err).Error("failed executing insert")
+			return
+		}
+		_, err = db.NamedExecContext(ctx, stmt, &Metadata{
+			AssetUUID:       sampleUUID,
+			AssetMetaDataId: 3,
+			Value:           strconv.Itoa(bpms[bpmRand]),
+		})
+		if err != nil {
+			logger.WithError(err).Error("failed executing insert")
+			return
+		}
+		_, err = db.NamedExecContext(ctx, stmt, &Metadata{
+			AssetUUID:       sampleUUID,
+			AssetMetaDataId: 4,
+			Value:           uuid.New().String(),
+		})
 		if err != nil {
 			logger.WithError(err).Error("failed executing insert")
 			return
