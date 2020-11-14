@@ -1,0 +1,15 @@
+*.pem
+*.sum
+bin/
+.*_build
+
+.idea/
+
+web/build
+web/package-lock.json
+web/node_modules
+
+.DS_Store
+**/.DS_Store
+main
+vendor/

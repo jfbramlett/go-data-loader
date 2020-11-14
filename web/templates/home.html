@@ -1,0 +1,30 @@
+{{ define "content" }}
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link" href="/">Create</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" href="/tab1">Tab 1</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/tab2">Tab 2</a>
+        </li>
+    </ul>
+    <br />
+    <h3><span class="badge badge-info">{{.Type}}</span></h3>
+    <br />
+    {{range $element := .Resources}}
+        <a href="{{$element.URL}}">{{$element.Name}}</a><br />
+    {{end}}
+    {{ if and . .Msg}}
+        <div class="alert" role="alert">
+            {{ .Msg }}
+        </div>
+    {{ end }}
+    {{ if and . .Error}}
+        <div class="alert alert-danger" role="alert">
+            {{ .Error }}
+        </div>
+    {{ end }}
+
+{{ end }}
