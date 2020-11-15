@@ -109,6 +109,7 @@ func querySample(ctx context.Context, samplesize int, retrievesize int, dsn stri
 
 func getUUIDs(ctx context.Context, db *sqlx.DB, table string, num int) ([]string, error) {
 	logger := ctx.Value(logKey).(*logrus.Entry)
+	logger.Info("retrieving uuids")
 
 	var rows int
 	err := db.GetContext(ctx, &rows, "select max(id) from "+table+" limit 1")
@@ -139,7 +140,7 @@ func getUUIDs(ctx context.Context, db *sqlx.DB, table string, num int) ([]string
 	for k := range uuids {
 		result = append(result, k)
 	}
-
+	logger.Info("retrieved uuids")
 	return result, nil
 }
 
@@ -160,6 +161,7 @@ func querymeta(ctx context.Context, samplesize int, retrievesize int, dsn string
 			return
 		}
 
+		logger.Infof("running query with uuids %v", uuids)
 		result := []*Metadata{}
 		query, args, _ := sqlx.In(`select ad.asset_uuid, ad.asset_metadata_id, md.name, md.datatype, ad.value 
 										 from asset_data ad 
@@ -173,7 +175,9 @@ func querymeta(ctx context.Context, samplesize int, retrievesize int, dsn string
 			logger.WithError(err).Error("failed running query")
 			return
 		}
-		executionTimes = append(executionTimes, time.Since(start))
+		took := time.Since(start)
+		logger.Infof("query completed in %dms", took.Milliseconds())
+		executionTimes = append(executionTimes, took)
 	}
 
 	avg := int64(0)

@@ -28,5 +28,6 @@ create table asset_data (
   asset_uuid varchar(60) not null,
   asset_metadata_id INT NOT NULL,
   value varchar(256) NOT NULL,
-  foreign key (asset_metadata_id) references metadata(id)
+  foreign key (asset_metadata_id) references metadata(id),
+  index asset_data_asset_uuid (asset_uuid)
 );

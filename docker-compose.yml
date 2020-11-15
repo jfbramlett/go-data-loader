@@ -1,7 +1,7 @@
 version: '3.5'
 
 services:
-  sampledb:
+  db:
     image: "mysql"
     environment:
       MYSQL_ROOT_PASSWORD: password
