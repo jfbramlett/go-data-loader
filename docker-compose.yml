@@ -1,11 +1,17 @@
 version: '3.5'
 
 services:
-  db:
+  sampledb:
     image: "mysql"
     environment:
       MYSQL_ROOT_PASSWORD: password
     ports:
       - "3306:3306"
 
+  metadb:
+    image: "mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      - "3306:3306"
 

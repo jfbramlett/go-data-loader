@@ -32,7 +32,7 @@ func init() {
 	// Here we create the command line flags for our app, and bind them to our package-local
 	// config variable.
 	flags := dbloaderCmd.Flags()
-	flags.Int("records", 900000, "the number of records to load")
+	flags.Int("records", 1000000, "the number of records to load")
 	flags.Bool("sample", false, "load the sample table or metadata table")
 	flags.String("dsn", "root:password@tcp(localhost:3306)/test", "db connection string")
 

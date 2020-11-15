@@ -11,7 +11,7 @@ start docker container d8b924fe91fe
 
 
 # Metadata Table Test Results
-- 4,000,000 rows in metadata table
+- 4c/g,000,000 rows in metadata table
 - sample query with in clause containing 100 random UUID's
 - 10 test runs
 - avg query response: 2ms
